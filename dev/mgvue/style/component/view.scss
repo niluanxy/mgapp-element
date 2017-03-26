@@ -1,0 +1,90 @@
+// ========================================================
+// view 样式生成器
+// ========================================================
+
+%full_screen {
+    position: absolute;
+    display: block;
+    height: 100%;
+    top: 0; right: 0;
+    bottom: 0; left: 0;
+    overflow: hidden;
+    background-color: #FFF;
+}
+
+@mixin app-wrap($class: app-wrap, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        @extend %full_screen;
+        z-index: 100;
+
+        @content;
+    }
+}
+
+@mixin view($class: view, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        @extend %full_screen;
+        z-index: 100;
+
+        &.slideInLeft {
+            @include animate(slideInLeft, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
+        }
+
+        &.slideInRight {
+            @include animate(slideInRight, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
+        }
+
+        &.slideOutLeft {
+            @include animate(slideOutLeft, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
+        }
+
+        &.slideOutRight {
+            @include animate(slideOutRight, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
+        }
+
+        &.hidden {
+            z-index: 50;
+            display: none;
+        }
+
+        &.animate {
+            z-index: 100;
+        }
+
+        &.display {
+            z-index: 200;
+        }
+
+        @content;   // 样式自定义扩展代码位置
+    }
+}
+
+@mixin page($class: page, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        display: block;
+        z-index: 10;
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        background-color: #fff;
+
+        &.full {
+            @extend %full_screen;
+        }
+
+        @content;   // 样式自定义扩展代码位置
+    }
+}
+
+@mixin loader($class: loader, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        @extend %full_screen;
+        z-index: 100;
+
+        &.hidden {
+            @include animate(fadeOut, 0.16s);
+        }
+
+        @content;   // 样式自定义扩展代码位置
+    }
+}

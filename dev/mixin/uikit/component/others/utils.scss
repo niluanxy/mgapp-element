@@ -1,0 +1,9 @@
+@mixin utils($prefix: $config-prefix) {
+    .#{$class-hide} {
+        display: none !important;
+    }
+
+    .blur {
+        filter: blur(rem(8px));
+    }
+}
