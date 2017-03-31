@@ -20,3 +20,6 @@
 # app 目录忽略相关文件
 /app/assets/debug
 /app/public/style/mixin.scss
+
+# 过滤软件生成的无用文件
+/_gsdata_

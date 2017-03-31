@@ -2,6 +2,8 @@ var gulp    = require("gulp-param")(require("gulp"), process.argv),
     Q       = require("q"),
     extend  = require("extend");
 
+var DIR = require("./task/base.js").DIR;
+
 gulp.bindTask = gulp.task;
 gulp.task = function(/* name, depends, function */) {
     var args = extend([], arguments), func;
@@ -48,8 +50,10 @@ gulp.task("dev-build-magic", require("./task/magic").build);
  *  mgapp 部分编译脚本
  *==========================================================================*/
 gulp.task("clean-dist", require("./task/mgapp").cleanDist);
+gulp.task("clean-style", require("./task/mgapp").cleanStyle);
 gulp.task("clean-assets", require("./task/mgapp").cleanAssets);
 gulp.task("dev-build-mgapp", require("./task/mgapp").build);
+gulp.task("dev-build-mgapp-main", require("./task/mgapp").buildMain);
 gulp.task("dev-build-mgapp-style", require("./task/mgapp").buildStyle);
 gulp.task("dev-build-mgapp-assets", require("./task/mgapp").buildAssets);
 
@@ -64,7 +68,11 @@ gulp.bindTask("serve", require("./task/server").server);
  *==========================================================================*/
 gulp.task("clean", function() {
     return Q.all([
-        require("./task/mgapp").cleanAssets(),
+        require("./task/mixin").clean(),
+        require("./task/mgvue").clean(),
+
         require("./task/mgapp").cleanDist(),
+        require("./task/mgapp").cleanStyle(),
+        require("./task/mgapp").cleanAssets()
     ]);
 })
