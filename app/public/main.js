@@ -1,4 +1,4 @@
-import MagicVue from "PUBLIC/magic/build.js";
+import MagicVue from "public/magic/build.js";
 import ElementUI from 'element-ui';
 
 MagicVue.Vue.use(ElementUI);    // 注册 ElementUI 框架

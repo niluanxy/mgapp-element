@@ -1,4 +1,5 @@
 module.exports = {
+    style: require("./style.css"),
     template: require("./template.html"),
 
     data: {
@@ -7,12 +8,6 @@ module.exports = {
         username: "",
         passwrod: "",
 
-        message: "default text",
+        message: "default text 111",
     },
-
-    methods: {
-        login: function() {
-
-        },
-    }
 }

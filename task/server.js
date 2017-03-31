@@ -6,10 +6,12 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     webSocket           = require('ws');
 
 
-var DIR    = require("./base").DIR,
-    ALIAS  = require("./base").ALIAS,
-    CONCAT = require("./base").CONCAT,
-    log    = require("./base").log,
+var DIR         = require("./base").DIR,
+    ALIAS       = require("./base").ALIAS,
+    CONCAT      = require("./base").CONCAT,
+
+    log         = require("./base").log,
+    getAddress  = require("./base").address,
 
     task_mixin_build = require("./mixin").build,
 
@@ -118,9 +120,9 @@ function startServer(d, r) {
 
                 server.listen(3000, "0.0.0.0", function() {
                     log("----------------------------------------------", "verbose");
-                    log("Server has run on http://localhost:3000", "verbose");
+                    log("Server has run on "+getAddress(), "verbose");
                     log("----------------------------------------------", "verbose");
-                    open("http://localhost:3000");
+                    open(getAddress());
                 });
             });
         });

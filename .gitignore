@@ -14,12 +14,14 @@
 /dev/mixin.scss
 /dev/concat
 
-/app/libs
-
 
 # app 目录忽略相关文件
 /app/assets/debug
+/app/assets/element
 /app/public/style/mixin.scss
+/app/public/main.css
+
+/app/pages/**/style.css
 
 # 过滤软件生成的无用文件
 /_gsdata_

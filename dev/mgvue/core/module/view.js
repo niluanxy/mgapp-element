@@ -87,6 +87,12 @@ export function renderView(name, params, $wrap) {
         $$params: params || {}
     });
 
+    // 保存到返回对象上，用于同步插件调用
+    $render.$$render = $parent;
+    $render.$$hash   = hash;
+    $render.$$name   = name;
+    $render.$$params = params || {};
+
     // 保存到渲染元素上，用于异步组件获取参数
     $wraper.$$hash   = hash;
     $wraper.$$name   = name;

@@ -1,5 +1,6 @@
 var moment  = require("moment"),
-    path    = require("path");
+    path    = require("path"),
+    ip      = require("ip");
 
 
 var DIR_BASE   = path.resolve(__dirname, "../")+"/",
@@ -67,9 +68,9 @@ var DIR_ALIAS = {
 };
 
 var SASS_ALIAS = [
-    { match: /public/g, value: DIR_ALIAS.public },
-    { match: /assets/g, value: DIR_ALIAS.assets },
-    { match: /styles/g, value: DIR_ALIAS.style }
+    { match: /public\//g, value: DIR_ALIAS.public+"/" },
+    { match: /assets\//g, value: DIR_ALIAS.assets+"/" },
+    { match: /styles\//g, value: DIR_ALIAS.style +"/" }
 ];
 
 // 修复 Win 下路劲格式导致 SASS 引入文件失败问题
@@ -100,8 +101,17 @@ function log(str, style) {
     console.log("["+_time+"] "+str.toString()[style]);
 }
 
+function localAddress(port, type) {
+    port = port || "3000";
+    type = type || "http";
+
+    return type+"://"+(ip.address() || "localhost")+":"+port;
+}
+
 module.exports = {
     log: log,
+    address: localAddress,
+
     DIR: DIR,
     CONCAT: CONCAT,
     ALIAS: DIR_ALIAS,

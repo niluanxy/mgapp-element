@@ -22,6 +22,8 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
 
 
 var log        = require("./base").log,
+    getAddress = require("./base").address,
+
     DIR        = require("./base").DIR,
     CONCAT     = require("./base").CONCAT,
     ALIAS      = require("./base").ALIAS,
@@ -111,13 +113,15 @@ function task_mgapp_style_build() {
 function task_mgapp_assets_build() {
     var defer_all = Q.defer(), defer_assets = Q.defer(),
         defer_html = Q.defer(), hotScript, remScript, cssString,
-        RELEASE = process.env.NODE_ENV == 'production';
+        RELEASE = process.env.NODE_ENV == 'production', address;
+
+    address = getAddress("3001", "ws");
 
     remScript = fs.readFileSync(DIR.TASK+"template/remScript.js").toString();
     remScript = '</title>\n'+remScript.replace(/\n$/, '');
 
     hotScript = fs.readFileSync(DIR.TASK+"template/hotSocket.js").toString();
-    hotScript = hotScript.replace(/_SOCKET_HOST_/g, "127.0.0.1");
+    hotScript = hotScript.replace(/_SOCKET_HOST_/g, address);
     hotScript = hotScript.replace(/_HOT_KEY_/g, HOT_KEY);
     hotScript = '\n'+hotScript+'</body>';
 
@@ -168,7 +172,7 @@ function task_mgapp_page_build() {
 function createConfig() {
     var plugins = [], loader, alias = extend({}, ALIAS),
         sassAlias = extend([], SASS_ALIAS),
-        RELEASE = process.env.NODE_ENV == 'production';
+        address = getAddress(), RELEASE = process.env.NODE_ENV == 'production';
 
     alias.vue = RELEASE ? "vue/dist/vue.min.js" : "vue/dist/vue.js";
 
@@ -203,7 +207,7 @@ function createConfig() {
     return {
         context: DIR.BASE,
         entry: RELEASE ? "./app/public/main.js" : [
-            'webpack-dev-server/client?http://localhost:3000',
+            'webpack-dev-server/client?'+address,
             'webpack/hot/only-dev-server',
             "./app/public/main.js"
         ],
