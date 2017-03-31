@@ -2,8 +2,6 @@ var gulp    = require("gulp-param")(require("gulp"), process.argv),
     Q       = require("q"),
     extend  = require("extend");
 
-var DIR = require("./task/base.js").DIR;
-
 gulp.bindTask = gulp.task;
 gulp.task = function(/* name, depends, function */) {
     var args = extend([], arguments), func;
