@@ -4,7 +4,7 @@
   "description": "magic app",
   "repository": {
     "type": "git",
-    "url": "https://git.coding.net/niluanxy/magic-element.git"
+    "url": "https://github.com/niluanxy/mgapp-element"
   },
   "author": "木风 <smufeng@126.com>",
   "license": "MIT",
