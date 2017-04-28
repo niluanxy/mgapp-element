@@ -176,7 +176,11 @@ viewMixins = {
         var self = this, $opt = self.$options;
 
         if ($opt.style && $opt.style.page) {
-            self.$el.classList.add($opt.style.page);
+            if (self.$$render) {
+                self.$$render.classList.add($opt.style.page);
+            } else {
+                self.$el.classList.add($opt.style.page);
+            }
         }
 
         viewParentFix(self);

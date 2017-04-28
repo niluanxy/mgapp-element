@@ -35,10 +35,11 @@ MagicVue.init = function(option, repath) {
     option = option || {};
     option.repath = !!repath;
 
-    option.onBefore = callApply("mgRouteBefore");
-    option.onAfter  = callApply("mgRouteAfter");
-    option.onAlways = callApply("mgRouteAlways");
     option.onInit   = callApply("mgRouteInit");
+    option.onBefore = callApply("mgRouteBefore");
+    option.onLeave  = callApply("mgRouteLeave");
+    option.onSuccess= callApply("mgRouteSuccess");
+    option.onAlways = callApply("mgRouteAlways");
 
     $Router = Router(Tables || {}, option);
     RootRouter.$route = $Router;
