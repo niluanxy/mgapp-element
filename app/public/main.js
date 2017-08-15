@@ -8,13 +8,25 @@ require("public/main.css");     // 全局公用样式文件加载
 MagicVue.$mount("#mgapp", function() {
     var load = MagicVue.loadView, init = MagicVue.initView;
 
+    require("component/mgAuth/index.js");       // 权限 Store
+
+    require("component/mgHeader/index.js");     // 公用 header
+    require("component/mgNavbar/index.js");     // 公用 navbar
+
     MagicVue.route({
         "/home": {
-            title: "首页测试",
-            on: load("home", require("pages/home")),
+            title: "首页",
+            on: load("home", function(defer, name) {
+                require(["pages/home"], init(defer, name));
+            }),
         },
+
+        "/login": {
+            title: "登陆",
+            on: load("login", require("pages/login")),
+        }
     }).init({
-        home: "home",
+        home: "login",
     }, true);
 });
 

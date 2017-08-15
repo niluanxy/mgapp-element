@@ -1,0 +1,62 @@
+@mixin wrap() {
+    $app-header-height:                40px;
+    $app-navbar-width:                180px;
+
+    .app-header, .app-navbar {
+        display: block;
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+    }
+
+    .app-wrap {
+        top:  $app-header-height;
+        left: $app-navbar-width;
+        right: 0; bottom: 0;
+        height: auto;
+        position: fixed;
+
+        >.view>.page {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            overflow: auto;
+        }
+    }
+
+    .app-navbar {
+        z-index: 200;
+        top: $app-header-height;
+        bottom: 0;
+        width: $app-navbar-width;
+
+        .navList {
+            height: 100%;
+            border-radius: 0;;
+            overflow-x: hidden;
+            overflow-y: scroll;
+
+            &::-webkit-scrollbar {
+                width: 0px;
+            }
+        }
+    }
+
+    .app-header {
+        z-index: 150;
+        height: $app-header-height;
+        padding: 0 20px;
+        background-color: #324058;
+
+        .exit {
+            float: right;
+            line-height: $app-header-height/2;
+        }
+
+        .path {
+            display: inline-block;
+            line-height: $app-header-height;
+        }
+    }
+
+}

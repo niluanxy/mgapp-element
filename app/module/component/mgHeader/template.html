@@ -1,0 +1,7 @@
+<div class="app-header" v-show="isLogin">
+    <el-breadcrumb class="path" separator="/">
+        <el-breadcrumb-item v-for="path in pathList">{{path}}</el-breadcrumb-item>
+    </el-breadcrumb>
+
+    <el-button class="exit" type="text">退出</el-button>
+</div>

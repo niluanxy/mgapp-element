@@ -1,6 +1,6 @@
 @include reset();
 @include utils();
 
-@include app-wrap();
 @include view();
 @include page();
+@include wrap();

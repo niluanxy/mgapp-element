@@ -1,0 +1,14 @@
+<mg-page>
+    <el-form class="loginBox" label-width="60px" label-position="left">
+        <el-form-item label="账户">
+            <el-input v-model="username" placeholder="请输入账户"></el-input>
+        </el-form-item>
+        <el-form-item label="密码">
+            <el-input v-model="password" placeholder="请输入密码"></el-input>
+        </el-form-item>
+
+        <el-form-item>
+            <el-button :disabled="disLogin" class="loginButton" type="primary" @click="login">登陆</el-button>
+        </el-form-item>
+    </el-form>
+</mg-page>

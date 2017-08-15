@@ -1,0 +1,25 @@
+:local(.page) {
+    @import "public/style/mixin.scss";
+
+    $loginBoxWidth:            300px;
+
+    .loginBox {
+        position: fixed;
+        top: 50%; left: 50%;
+
+        display: block;
+
+        width: $loginBoxWidth;
+        padding: 20px 22px;
+        padding-bottom: 0;
+
+        transform: translate(-50%, -50%);
+
+        border: $border-default;
+        border-radius: $border-radius-large;
+    }
+
+    .el-button {
+        float: right;
+    }
+}

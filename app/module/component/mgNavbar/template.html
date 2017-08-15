@@ -1,0 +1,12 @@
+<div class="app-navbar" v-show="isLogin">
+    <el-menu @select="navSelect" class="navList" :unique-opened="true" theme="dark">
+        <el-submenu v-for="(nav, imen) in navList" :index="imen+''" :key="imen+''">
+            <template slot="title">{{nav.label}}</template>
+
+            <el-menu-item v-for="(sub, isub) in nav.children"
+                :index="imen+'_'+isub" :key="imen+'_'+isub">
+                {{sub.label}}
+            </el-menu-item>
+        </el-submenu>
+    </el-menu>
+</div>
