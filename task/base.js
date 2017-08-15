@@ -58,6 +58,7 @@ var DIR_ALIAS = {
     MV_CORE  : DIR.MGVUE+"core",
     MV_UIKIT : DIR.MGVUE+"mui",
         MV_MODULE: DIR.MGVUE+"core/module",
+    MV_HOTFIX: DIR.MGVUE+"hotfix",
 
     // magic app 相关目录常量
     assets: DIR.APP_ASSETS,
@@ -72,7 +73,7 @@ var DIR_ALIAS = {
 var SASS_ALIAS = [
     { match: /([\"\'])public\//g, value: "$1"+DIR_ALIAS.public },
     { match: /([\"\'])assets\//g, value: "$1"+DIR_ALIAS.assets },
-    { match: /([\"\'])styles\//g, value: "$1"+DIR_ALIAS.style  },
+    { match: /([\"\'])module\//g, value: "$1"+DIR_ALIAS.module },
     { match: /\.\/fonts\/icomoon/g, value: DIR_ALIAS.assets+"icons/fonts/icomoon" }
 ];
 

@@ -79,7 +79,8 @@ function startDevWatch(port) {
 
     gulp.watch([DIR.MINJS+"**/*.js", DIR.MAGIC+"**/*.js",
                 DIR.MGVUE+"**/*.js", DIR.APP_PUBLIC+"**/*.js",
-                DIR.APP_MODULE+"**/*.js", DIR.APP_MODULE+"**/*.html"])
+                DIR.APP_MODULE+"**/*.js", DIR.APP_MODULE+"**/*.html",
+                "!"+DIR.APP_PUBLIC+"main.dev.js"])
         .on("change", function() {
             task_mgapp_main_build(port-1).then(function() {
                 wss.broadcast("_MG_RELOAD_");
@@ -102,6 +103,7 @@ function startServer(d, r) {
             compile = webpack(config);
             address = config.entry[0].match(/client\?(.*)$/);
             address = {
+                base: address[1].match(/https?:\/\/(.*)(:\d*)/)[1],
                 addr: address[1],
                 port: parseInt(address[1].match(/:(\d*)$/)[1])
             };
@@ -125,11 +127,12 @@ function startServer(d, r) {
                 log("--- mgapp main build finish");
 
                 var server = new webpackDevServer(compile, {
-                    hot: true, noInfo: true, quiet: true,
-                    publicPath: '/pages/', contentBase: DIR.APP_DIST,
-                });
+                        public: address.base,
+                        hot: true, noInfo: true, quiet: true,
+                        publicPath: '/pages/', contentBase: DIR.APP_DIST,
+                    });
 
-                server.listen(address.port, "0.0.0.0", function() {
+                server.listen(address.port, address.base, function() {
                     log("----------------------------------------------", "verbose");
                     log("Server has run on "+address.addr, "verbose");
                     log("----------------------------------------------", "verbose");
@@ -148,6 +151,33 @@ function startServer(d, r) {
     }
 }
 
+function devServer() {
+    var reload = browserSync.reload;
+
+    Q.all([
+        task_mixin_build(),
+        task_minjs_build(),
+        task_magic_build()
+    ]).then(function() {
+        browserSync.init({
+            server: { baseDir: DIR.APP }
+        });
+    })
+
+    gulp.watch([DIR.MIXIN+"**/*.scss"]).on("change", function() {
+        task_mixin_build().then(function() { reload() });
+    });
+
+    gulp.watch([DIR.MINJS+"**/*.js"]).on("change", function() {
+        task_minjs_build().then(function() { reload() });
+    });
+
+    gulp.watch([DIR.MAGIC+"**/*.js"]).on("change", function() {
+        task_magic_build().then(function() { reload() });
+    });
+}
+
 module.exports = {
     server: startServer,
+    devServer: devServer,
 };

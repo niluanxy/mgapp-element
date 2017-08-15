@@ -5,6 +5,8 @@ import ConfigUI from "MV_UIKIT/base/config.js";
 import "MV_UIKIT/page/main.js";
 import "MV_UIKIT/router/main.js";
 
+import "MV_HOTFIX/build.js";
+
 MagicVue.Magic = RootMagic;
 MagicVue.config.ui = ConfigUI;
 

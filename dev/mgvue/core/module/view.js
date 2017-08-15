@@ -1,12 +1,14 @@
 import MagicVue from "MV_CORE/base/main.js";
-import {extend} from "LIB_MINJS/utils.js";
+import {extend, element} from "LIB_MINJS/utils.js";
 import {getValue} from "MV_CORE/base/tools.js";
 import {uuid} from "MG_STATIC/utils/main.js";
 import {isFunction, isObject, isTrueString,
     isElement, isArray} from "LIB_MINJS/check.js";
 
-import * as Cache from "MV_MODULE/cache.js";
-import bindEvents from "MV_MODULE/event.js";
+import * as Cache from "MV_CORE/utils/cache.js";
+import bindEvents from "MV_CORE/utils/event.js";
+import ConfigMG from "MG_UIKIT/base/config.js";
+import {tryBindCtrl} from "MV_UIKIT/base/tools.js";
 
 var viewMixins, $CACHE_SHOW = null,
     RootVue = MagicVue.RootVue, RootEmitter = MagicVue.RootEmitter;
@@ -20,18 +22,20 @@ export function nameTrans(name, tag) {
 }
 
 function createWraper(dom) {
-    var $wrap = dom;
+    var $wrap = element(dom);
 
     if (!isElement($wrap)) {
         $wrap = document.createElement("div");
         $wrap.innerHTML = "<div></div><div></div>";
-        $wrap.className = "view";
+        $wrap.className = ConfigMG.prefix+"view";
 
         MagicVue.$root.appendChild($wrap);
-    }
 
-    MagicVue.emit("mgWrapCreated", $wrap);
-    return $wrap.childNodes[0];
+        MagicVue.emit("mgWrapCreated", $wrap);
+        return $wrap.childNodes[0];
+    } else {
+        return $wrap;
+    }
 }
 
 function createEmitBind(hash, type) {
@@ -114,7 +118,14 @@ function viewFactory(view) {
         }
     }
 
-    view.props = ["params"];
+    if (!view.props) {
+        view.props = ["params", "viewCtrl"];
+    } else if (isArray(view.props)) {
+        view.props = view.props.concat(["params", "viewCtrl"]);
+    } else if (typeof view.props == "object") {
+        view.props.params = {default: null};
+        view.props.viewCtrl = {default: null};
+    }
 
     if (isArray(view.mixins)) {
         view.mixins.push(viewMixins);
@@ -147,9 +158,9 @@ viewMixins = {
         var self = this, $opt = self.$options, $el = $opt.el;
 
         // 尝试恢复 view 模式组件的渲染参数
-        self.$$hash   = $opt.hash || $el.$$hash || "";
-        self.$$name   = $opt.name || $el.$$name || $opt._componentTag || "";
-        self.$$render = $opt.$$render || $el.$$render || null;
+        self.$$hash   = $opt.$$hash || ($el ? $el.$$hash : "");
+        self.$$name   = $opt.$$name || ($el ? $el.$$name : $opt._componentTag);
+        self.$$render = $opt.$$render || ($el ? $el.$$render : null);
 
         if (self.params !== undefined) {
             var params = self.params, value;
@@ -162,13 +173,21 @@ viewMixins = {
 
             self.$$params = extend(true, {}, value);
         } else {
-            self.$$params = extend(true, {}, $opt.$$params || $el.$$params);
+            var params = $el ? $el.$$params : $opt.$$params;
+            self.$$params = extend(true, {}, self.params || params);
+        }
+
+        if (self.$$render && self.$$render.parentNode == MagicVue.$root) {
+            self.$$viewMode = "view";
+        } else {
+            self.$$viewMode = "modal";
+            self.$$defaultHide = true;
         }
 
         bindEvents(self);
         self.$emit("mgViewCreated");
 
-        // 尝试调用 view 模式页面回调事件
+        // 尝试调用页面回调事件
         viewEmitCall(self, "created");
     },
 
@@ -183,12 +202,20 @@ viewMixins = {
             }
         }
 
-        viewParentFix(self);
+        if (self.viewMode == "view") viewParentFix(self);
         self.$emit("mgViewReady", self.$$params);
 
-        // 尝试调用 view 模式页面回调事件
+        if (isTrueString(self.viewCtrl)) {
+            tryBindCtrl(self, self, "viewCtrl");
+        }
+
+        // 尝试调用页面回调事件
         viewEmitCall(self, "ready");
-        MagicVue.emit("mgViewMounted", self, self.$$params);
+
+        // 保证 mgViewMounted 事件在 mgViewChange 后执行
+        setTimeout(function() {
+            MagicVue.emit("mgViewMounted", self, self.$$params);
+        });
 
         // 默认不是隐藏的页面，则立即触发 显示回调事件
         if (!self.$$defaultHide) {

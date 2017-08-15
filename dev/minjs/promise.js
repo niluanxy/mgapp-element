@@ -105,6 +105,22 @@ Defer.prototype.reject = function() {
     return this;
 }
 
-export default function() {
-    return new Defer();
-};
+var Creater = function() {
+	return new Defer();
+}
+
+Creater.all = function(list) {
+    var len = 0, max = list.length, defer = Creater();
+
+    for(var i=0; i<list.length; i++) {
+	    list[i].then(function() {
+            if (++len == max) {
+                defer.resolve();
+            }
+        });
+    }
+
+    return defer;
+}
+
+export default Creater;

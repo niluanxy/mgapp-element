@@ -1,0 +1,17 @@
+// ========================================================
+// timer 到计数组件
+// ========================================================
+
+@mixin timer($class: timer, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        display: inline-block;
+        overflow: hidden;
+
+        &-before, &-ready, &-after {
+            display: block;
+            width: 100%;
+        }
+
+        @content;
+    }
+}

@@ -1,6 +1,22 @@
 .el-dialog__wrapper {
     position: absolute;
+    overflow: hidden;
     background-color: rgba(0,0,0, 0.5);
+
+    .el-dialog {
+        top: 50% !important;
+        left: 50% !important;
+        transform: translateX(-50%) translateY(-50%) !important;
+    }
+
+    .el-dialog__body {
+        padding: 20px;
+        padding-bottom: 0;
+    }
+
+    .el-dialog__footer {
+        padding-bottom: 20px;
+    }
 }
 
 .v-modal {

@@ -17,6 +17,8 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     sass                = require("gulp-sass"),
     cssImport           = require("gulp-cssimport"),
     fs                  = require("fs"),
+    htmlmin             = require('gulp-htmlmin'),
+    hashint             = require("hash-int"),
     ip                  = require("ip"),
     webpack             = require("webpack"),
     webpackUglifyJS     = require('uglifyjs-webpack-plugin');
@@ -97,9 +99,15 @@ function task_mgapp_style_build() {
     .pipe(gulp.dest(DIR.APP_ASSETS+"debug/"))
     .on("finish", function() { defer_main.resolve() });
 
-    gulp.src(PATH+"lib/theme-default/fonts/*")
-    .pipe(gulp.dest(DIR.APP_ASSETS+"debug/fonts/"))
-    .on("finish", function() { defer_font.resolve() });
+    if (RELEASE) {
+        gulp.src(PATH+"lib/theme-default/fonts/*")
+        .pipe(gulp.dest(DIR.APP_DIST+"assets/fonts/"))
+        .on("finish", function() { defer_font.resolve() });
+    } else {
+        gulp.src(PATH+"lib/theme-default/fonts/*")
+        .pipe(gulp.dest(DIR.APP_ASSETS+"debug/fonts/"))
+        .on("finish", function() { defer_font.resolve() });
+    }
 
     Q.all([defer_main.promise, defer_font.promise])
     .then(function() {
@@ -188,13 +196,25 @@ function createConfig(port) {
         RELEASE = process.env.NODE_ENV == 'production';
 
     alias.vue = RELEASE ? "vue/dist/vue.min.js" : "vue/dist/vue.js";
+    alias.vuex = RELEASE ? "vuex/dist/vuex.min.js" : "vuex/dist/vuex.js";
 
     sassAlias.push({
         match: /\.\/fonts/g, value: DIR.APP_ASSETS+"debug/fonts"
     });
 
+    plugins.push(new webpack.optimize.ModuleConcatenationPlugin());
+
     if (RELEASE) {
-        plugins.push(new webpackUglifyJS());
+        plugins.push(new webpackUglifyJS({
+            beautify: false,
+            comments: false,
+            compress: {
+                warnings: false,
+                drop_console: true,
+                collapse_vars: true,
+                reduce_vars: true,
+            }
+        }));
     } else {
         plugins.push(new webpack.HotModuleReplacementPlugin());
         plugins.push(new webpack.NamedModulesPlugin());
@@ -217,6 +237,18 @@ function createConfig(port) {
         }
     ];
 
+    if (RELEASE) {
+        var delcss = /require.*public.*main\.css.*\;/g;
+
+        loader.unshift({
+            test: /public[\\\/]*main\.js$/,
+            use : [{
+                loader : "replace-plus-loader", 
+                options: {replace: {match: delcss, value: ""}} 
+            }]
+        });
+    }
+
     if (port !== undefined) {
         address.resolve("http://"+(ip.address() || "localhost")+":"+port);
     } else {
@@ -226,6 +258,8 @@ function createConfig(port) {
     }
 
     address.promise.then(function(hotUrl) {
+        var fname = RELEASE ? "[name].[chunkhash:8].js" : "[name].js";
+
         config.resolve({
             context: DIR.BASE,
             entry: RELEASE ? "./app/public/main.js" : [
@@ -234,8 +268,8 @@ function createConfig(port) {
                 "./app/public/main.js"
             ],
             output: {
-                publicPath: '/pages/', path: DIR.APP_DIST+"pages/",
-                filename: '[name].js', library: 'MagicVue', libraryTarget: "umd",
+                publicPath: 'pages/', path: DIR.APP_DIST+"pages/",
+                filename: fname, library: 'MagicVue', libraryTarget: "umd",
             },
             module : { rules: loader },
             resolve: { alias: alias }, plugins: plugins,
@@ -248,10 +282,10 @@ function createConfig(port) {
 function createReplace() {
     var result = {}, RELEASE = process.env.NODE_ENV == 'production';
 
-    result.oldStr = RELEASE ? /(\w)(\.MagicVue=)(\w\(\))/
+    result.oldStr = RELEASE ? /(exports\.MagicVue)\=(\S\(\))\:(\S)\.MagicVue\=(\S\(\))/
                             : /else\s*root\[\"MagicVue\"\] = factory\(\);/;
-    result.newStr = RELEASE ? '$1$2$3;if("undefined"==typeof define&&!$1.$$)$1.$$=$1.MagicVue;'+
-                              'if("undefined"==typeof define&&!$1.$)$1.$=$1.MagicVue.Magic;'
+    result.newStr = RELEASE ? 'exports.MagicVue=$2:(function(){$3.MagicVue=$3.$$$=$2.default;'+
+                              '$3.Magic=$3.$=$3.$$$.Magic})()'
                             : 'else {\n\t\troot.MagicVue = root.$$$ = factory().default;'+
                               ' \n\t\troot.Magic = root.$ = root.MagicVue.Magic;\n\t}';
 
@@ -267,19 +301,70 @@ function createReplace() {
 }
 
 function task_mgapp_main_fix() {
-    var defer_fix = Q.defer(), replaceStr = createReplace();
+    var defer_fix = Q.defer(), defer_css = Q.defer(),
+        defer_all = Q.defer(), NAME_CSS, NAME_JS,
+        DIR_ASSETS, replaceStr = createReplace(),
+        RELEASE = process.env.NODE_ENV == 'production';
+
+    DIR_ASSETS = DIR.APP_DIST+"assets/";
 
     gulp.src(DIR.APP_DIST+"pages/main*.js")
     .pipe(replace(replaceStr.oldStr,  replaceStr.newStr))
     .pipe(replace(replaceStr.oldSet,  replaceStr.newSet))
     .pipe(replace(replaceStr.oldHash, replaceStr.newHash))
-    .pipe(gulp.dest(DIR.APP_DIST+"assets/"))
+    .pipe(gulp.dest(DIR_ASSETS))
     .on("finish", function() {
         del(DIR.APP_DIST+"pages/main*.js");
-        defer_fix.resolve();
+
+        if (RELEASE) {
+            fs.readdir(DIR_ASSETS, function(erros, files) {
+                for(var i=0; i<files.length; i++) {
+                    var find = files[i].match(/main.*\.js/);
+
+                    if (find) { NAME_JS = find[0]; break; }
+                }
+
+                defer_fix.resolve();
+            });
+        } else {
+            defer_fix.resolve();
+        }
     });
 
-    return defer_fix.promise;
+    if (RELEASE) {
+        NAME_CSS = "main."+(hashint((new Date).getTime())+"").substr(0, 8)+".css";
+
+        gulp.src(DIR_ASSETS+"main.css")
+        .pipe(rename(NAME_CSS))
+        .pipe(gulp.dest(DIR_ASSETS))
+        .on("finish", function() {
+            del(DIR_ASSETS+"main.css");
+
+            defer_css.resolve();
+        });
+
+        Q.all([defer_fix.promise, defer_css.promise])
+        .then(function() {
+            gulp.src(DIR.APP_DIST+"index.html")
+            .pipe(replace(/main\..*css/g, NAME_CSS))
+            .pipe(replace(/main\..*js/g,  NAME_JS))
+            .pipe(htmlmin({
+                minifyJS: true,
+                minifyCSS: true,
+                removeComments: true,
+            }))
+            .pipe(gulp.dest(DIR.APP_DIST))
+            .on("finish", function() {
+                defer_all.resolve();
+            })
+        });
+    } else {
+        defer_fix.promise.then(function() {
+            defer_all.resolve();
+        });
+    }
+
+    return defer_all.promise;
 }
 
 function webpackCallback(callback) {

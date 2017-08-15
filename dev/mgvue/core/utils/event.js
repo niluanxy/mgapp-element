@@ -1,5 +1,6 @@
 import {each} from "LIB_MINJS/utils.js";
 
+// 页面添加 events 属性，可以直接定义事件
 export default function bindEvents(self) {
     var arrs = self.$options;
 
