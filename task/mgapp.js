@@ -202,6 +202,9 @@ function createConfig(port) {
         match: /\.\/fonts/g, value: DIR.APP_ASSETS+"debug/fonts"
     });
 
+    plugins.push(new webpack.DefinePlugin({
+        PRODUCTION: JSON.stringify(RELEASE),
+    }));
     plugins.push(new webpack.optimize.ModuleConcatenationPlugin());
 
     if (RELEASE) {
