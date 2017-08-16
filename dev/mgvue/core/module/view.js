@@ -177,18 +177,36 @@ viewMixins = {
             self.$$params = extend(true, {}, self.params || params);
         }
 
-        if (self.$$render && self.$$render.parentNode == MagicVue.$root) {
-            self.$$viewMode = "view";
-        } else {
-            self.$$viewMode = "modal";
-            self.$$defaultHide = true;
-        }
-
         bindEvents(self);
+
         self.$emit("mgViewCreated");
+        MagicVue.emit("mgViewCreated", self, self.$$params);
 
         // 尝试调用页面回调事件
         viewEmitCall(self, "created");
+    },
+
+    beforeMount: function() {
+        var self = this, $opt = self.$options;
+
+        if (self.$$render && self.$$render.parentNode == MagicVue.$root) {
+            self.$$viewMode = "view";
+            viewParentFix(self);
+        } else {
+            self.$$viewMode = "other";
+        }
+
+        self.$$defaultHide = !!self.$$defaultHide;
+
+        self.$emit("mgViewReady", self.$$params);
+        MagicVue.emit("mgViewReady", self, self.$$params);
+
+        if (isTrueString(self.viewCtrl)) {
+            tryBindCtrl(self, self, "viewCtrl");
+        }
+
+        // 尝试调用页面回调事件
+        viewEmitCall(self, "ready");
     },
 
     mounted: function() {
@@ -202,18 +220,9 @@ viewMixins = {
             }
         }
 
-        if (self.viewMode == "view") viewParentFix(self);
-        self.$emit("mgViewReady", self.$$params);
-
-        if (isTrueString(self.viewCtrl)) {
-            tryBindCtrl(self, self, "viewCtrl");
-        }
-
-        // 尝试调用页面回调事件
-        viewEmitCall(self, "ready");
-
-        // 保证 mgViewMounted 事件在 mgViewChange 后执行
+        self.$emit("mgViewMounted", self.$$params);
         setTimeout(function() {
+            // 保证 mgViewMounted 事件在 mgViewChange 后执行
             MagicVue.emit("mgViewMounted", self, self.$$params);
         });
 
@@ -230,6 +239,7 @@ viewMixins = {
 
         self.$emit("mgViewHide", self.$$params);
         self.$emit("mgViewDestory");
+        MagicVue.emit("mgViewDestory", self, self.$$params);
     },
 };
 

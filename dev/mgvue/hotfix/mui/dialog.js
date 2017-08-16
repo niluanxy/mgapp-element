@@ -1,3 +1,5 @@
+import MagicVue from "MV_CORE/build.js";
+import {getName} from "MV_UIKIT/base/tools.js";
 import {addMixins, findView} from "MV_HOTFIX/base/tools.js";
 
 addMixins("Dialog", {
@@ -15,5 +17,13 @@ addMixins("Dialog", {
                 }
             }
         });
+    }
+});
+
+MagicVue.on("mgViewReady", function(scope, params) {
+    var parent = scope.$parent, name = getName(parent);
+
+    if (name == "ElDialog") {
+        scope.$$defaultHide = !parent.visible;
     }
 });
