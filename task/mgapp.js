@@ -76,8 +76,7 @@ function task_mgapp_style_old() {
         .pipe(cssImport())
         .pipe(autoprefixer())
         .pipe(px2rem(px2remConfig))
-        .pipe(gulpif(!RELEASE, gulp.dest(DIR.APP_PUBLIC)))
-        .pipe(gulpif(RELEASE,  gulp.dest(DIR.APP_DIST+"assets/")))
+        .pipe(gulp.dest(DIR.APP_DIST+"assets/"))
         .on("finish", function() {
             log("--- mgapp style build finish");
             defer_build.resolve();
@@ -167,12 +166,21 @@ function task_mgapp_assets_build(port) {
     return defer_all.promise;
 }
 
-function task_mgapp_page_build() {
-    var defer_build = Q.defer(), RELEASE;
+function task_mgapp_page_build(path) {
+    var defer_build = Q.defer(), RELEASE,
+        watchFiles, watchOutput;
+
+    if (typeof path == "string" && path.match(DIR.APP)) {
+        watchFiles = path;
+        watchOutput= path.replace(/style\.scss$/, '');
+    } else {
+        watchFiles = DIR.APP+"pages/**/style.scss";
+        watchOutput= DIR.APP+"pages/";
+    }
 
     RELEASE = process.env.NODE_ENV == 'production';
 
-    gulp.src(DIR.APP+"pages/**/style.scss")
+    gulp.src(watchFiles)
     .pipe(replace(SASS_FIX(SASS_ALIAS)))
     .pipe(sass.sync({
         outputStyle: RELEASE ? "compressed" : "nested",
@@ -180,9 +188,9 @@ function task_mgapp_page_build() {
     .pipe(cssImport())
     .pipe(autoprefixer())
     .pipe(px2rem(px2remConfig))
-    .pipe(gulp.dest(DIR.APP+"pages/"))
+    .pipe(gulp.dest(watchOutput))
     .on("finish", function() {
-        log("--- mgapp page style build finish");
+        log("--- mgapp style page build finish");
         defer_build.resolve();
     });
 
@@ -241,7 +249,7 @@ function createConfig(port) {
     ];
 
     if (RELEASE) {
-        var delcss = /require.*public.*main\.css.*\;/g;
+        var delcss = /require.*dist.*assets.*main\.css.*\;/g;
 
         loader.unshift({
             test: /public[\\\/]*main\.js$/,

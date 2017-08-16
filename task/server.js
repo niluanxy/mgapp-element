@@ -1,4 +1,5 @@
 var gulp                = require("gulp-param")(require("gulp"), process.argv),
+    chokidar            = require('chokidar'),
     Q                   = require("q"),
     open                = require("opn"),
     webpack             = require("webpack"),
@@ -50,9 +51,15 @@ function startDebugWatch() {
 function startDevWatch(port) {
     port = port || 3001;    // 设置 socket 监听端口
 
-    var wss = new webSocket.Server({ port: port });
+    var wss = new webSocket.Server({ port: port }),
+        APP_PUB = DIR.APP_PUBLIC, APP_MOD = DIR.APP_MODULE,
+        watchOpt = {
+            interval: 1,
+            binaryInterval: 200,
+            ignoreInitial: true,
+        };
 
-    wss.broadcast = function broadcast(data) {
+    wss.broadcast = function(data) {
         wss.clients.forEach(function(client) {
             if (client.readyState === webSocket.OPEN) {
                 client.send(data);
@@ -60,32 +67,41 @@ function startDevWatch(port) {
         });
     };
 
-    gulp.watch([DIR.APP+"index.html", DIR.APP_ASSETS+"**/*",
-                "!"+DIR.APP_ASSETS+"debug/**/*"])
-        .on("change", function() {
-            task_mgapp_assets_build(port).then(function() {
-                wss.broadcast("_MG_RELOAD_");
-            });
+
+    chokidar.watch([DIR.APP+"index.html", DIR.APP_ASSETS+"**/*",
+        "!"+DIR.APP_ASSETS+"debug/**/*"], watchOpt)
+    .on("all", function() {
+        task_mgapp_assets_build(port).then(function() {
+            wss.broadcast("_MG_RELOAD_");
         });
+    })
 
-    gulp.watch([DIR.MIXIN+"**/*", DIR.MGVUE+"style/**/*",
-                DIR.APP_PUBLIC+"**/*.scss", DIR.APP_MODULE+"**/*.scss",
-                "!"+DIR.APP_PUBLIC+"style/mixin.scss"])
-        .on("change", task_mgapp_style_build);
 
-    gulp.watch([DIR.APP+"pages/**/style.scss", DIR.APP_PUBLIC+"style/mixin.scss",
-                DIR.APP_MODULE+"style/**/*.scss"])
-        .on("change", task_mgapp_page_build);
+    chokidar.watch([DIR.MIXIN+"**/*", DIR.MGVUE+"style/**/*",
+        DIR.APP_MODULE+"**/*.scss", APP_PUB+"**/*.scss",
+        "!"+APP_PUB+"style/mixin.scss"], watchOpt)
+    .on("all", task_mgapp_style_build);
 
-    gulp.watch([DIR.MINJS+"**/*.js", DIR.MAGIC+"**/*.js",
-                DIR.MGVUE+"**/*.js", DIR.APP_PUBLIC+"**/*.js",
-                DIR.APP_MODULE+"**/*.js", DIR.APP_MODULE+"**/*.html",
-                "!"+DIR.APP_PUBLIC+"main.dev.js"])
-        .on("change", function() {
-            task_mgapp_main_build(port-1).then(function() {
-                wss.broadcast("_MG_RELOAD_");
-            });
+
+    chokidar.watch([DIR.APP+"pages/**/style.scss", APP_PUB+"style/mixin.scss",
+        APP_MOD+"style/**/*.scss"], watchOpt)
+    .on("all", function(type, file) {
+        if (file.match(/style.*mixin\.scss$/)) {
+            task_mgapp_page_build();
+        } else {
+            task_mgapp_page_build(file);
+        }
+    });
+
+
+    chokidar.watch([DIR.MINJS+"**/*.js", DIR.MAGIC+"**/*.js", DIR.MGVUE+"**/*.js",
+                    APP_PUB+"**/*.js", APP_MOD+"**/*.js", APP_MOD+"**/*.html",
+                    "!"+APP_PUB+"main.dev.js"], watchOpt)
+    .on("all", function() {
+        task_mgapp_main_build(port-1).then(function() {
+            wss.broadcast("_MG_RELOAD_");
         });
+    });
 }
 
 function startServer(d, r) {

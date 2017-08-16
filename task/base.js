@@ -68,6 +68,8 @@ var DIR_ALIAS = {
         style: DIR.APP_MODULE+"style",
         store: DIR.APP_MODULE+"store",
         component: DIR.APP_MODULE+"component",
+
+    dist  : DIR.APP_DIST,
 };
 
 var SASS_ALIAS = [
