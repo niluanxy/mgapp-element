@@ -91,14 +91,15 @@ function task_mgapp_style_build() {
         defer_build = Q.defer(), RELEASE,
         PATH = DIR.BASE+"node_modules/element-ui/";
 
-    RELEASE = process.env.NODE_ENV == 'production';
+    RELEASE = process.env.NODE_ENV == 'production',
+    ISBUILD = process.env.NODE_BUILD || RELEASE;
 
     gulp.src(PATH+"lib/theme-default/index.css")
     .pipe(rename("eleui.css"))
     .pipe(gulp.dest(DIR.APP_ASSETS+"debug/"))
     .on("finish", function() { defer_main.resolve() });
 
-    if (RELEASE) {
+    if (ISBUILD) {
         gulp.src(PATH+"lib/theme-default/fonts/*")
         .pipe(gulp.dest(DIR.APP_DIST+"assets/fonts/"))
         .on("finish", function() { defer_font.resolve() });
@@ -122,7 +123,8 @@ function task_mgapp_assets_build(port) {
     var defer_all = Q.defer(), defer_assets = Q.defer(),
         defer_html = Q.defer(), defer_hoturl = Q.defer(),
         hotScript, remScript, cssString, hotUrl,
-        RELEASE = process.env.NODE_ENV == 'production';
+        RELEASE = process.env.NODE_ENV == 'production',
+        ISBUILD = process.env.NODE_BUILD || RELEASE;
 
     if (port !== undefined) {
         defer_hoturl.resolve("ws://"+(ip.address() || "localhost")+":"+port);
@@ -147,8 +149,8 @@ function task_mgapp_assets_build(port) {
 
         gulp.src(DIR.APP+"index.html")
         .pipe(replace(/\<\/title\>/, remScript))
-        .pipe(gulpif(!RELEASE, replace(cssString, '')))
-        .pipe(gulpif(!RELEASE, replace(/\<\/body\>/,  hotScript)))
+        .pipe(gulpif(!ISBUILD, replace(cssString, '')))
+        .pipe(gulpif(!ISBUILD, replace(/\<\/body\>/,  hotScript)))
         .pipe(gulp.dest(DIR.APP_DIST))
         .on("finish", function() { defer_html.resolve() })
     });
@@ -201,7 +203,8 @@ function createConfig(port) {
     var plugins = [], loader, alias = extend({}, ALIAS),
         sassAlias = extend([], SASS_ALIAS),
         address = Q.defer(), config = Q.defer(),
-        RELEASE = process.env.NODE_ENV == 'production';
+        RELEASE = process.env.NODE_ENV == 'production',
+        ISBUILD = process.env.NODE_BUILD || RELEASE;
 
     alias.vue = RELEASE ? "vue/dist/vue.min.js" : "vue/dist/vue.js";
     alias.vuex = RELEASE ? "vuex/dist/vuex.min.js" : "vuex/dist/vuex.js";
@@ -226,7 +229,7 @@ function createConfig(port) {
                 reduce_vars: true,
             }
         }));
-    } else {
+    } else if (!ISBUILD) {
         plugins.push(new webpack.HotModuleReplacementPlugin());
         plugins.push(new webpack.NamedModulesPlugin());
     }
@@ -248,7 +251,7 @@ function createConfig(port) {
         }
     ];
 
-    if (RELEASE) {
+    if (ISBUILD) {
         var delcss = /require.*dist.*assets.*main\.css.*\;/g;
 
         loader.unshift({
@@ -273,7 +276,7 @@ function createConfig(port) {
 
         config.resolve({
             context: DIR.BASE,
-            entry: RELEASE ? "./app/public/main.js" : [
+            entry: ISBUILD ? "./app/public/main.js" : [
                 'webpack-dev-server/client?'+hotUrl,
                 'webpack/hot/only-dev-server',
                 "./app/public/main.js"

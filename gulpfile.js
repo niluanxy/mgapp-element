@@ -58,7 +58,10 @@ gulp.task("dev-build-mgapp-assets", require("./task/mgapp").buildAssets);
 /*==========================================================================
  *  开发打包 核心脚本
  *==========================================================================*/
-gulp.task("build", require("./task/mgapp").build);
+gulp.task("build", function() {
+    process.env.NODE_BUILD = true;
+    require("./task/mgapp").build();
+});
 gulp.bindTask("serve", require("./task/server").server);
 
 /*==========================================================================
