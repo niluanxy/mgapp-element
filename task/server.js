@@ -86,10 +86,12 @@ function startDevWatch(port) {
     chokidar.watch([DIR.APP+"pages/**/style.scss", APP_PUB+"style/mixin.scss",
         APP_MOD+"style/**/*.scss"], watchOpt)
     .on("all", function(type, file) {
-        if (file.match(/style.*mixin\.scss$/)) {
-            task_mgapp_page_build();
-        } else {
+        var isDel = type.match(/^unlink/);
+
+        if (!isDel && file.match(/style\.scss$/)) {
             task_mgapp_page_build(file);
+        } else {
+            task_mgapp_page_build();
         }
     });
 
